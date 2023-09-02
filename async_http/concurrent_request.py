@@ -154,20 +154,39 @@ from util.async_http import fetch_status_delayed
 # asyncio.run(main())
 
 # Example 8 : wait - FIRST_COMPLETED , but process others as they complete similar to as_completed
+# @async_timed()
+# async def main():
+#     async with ClientSession() as session:
+#         
+#         pending = [
+#                 asyncio.create_task(fetch_status(session, 'https://www.example.com')),
+#                 asyncio.create_task(fetch_status(session, 'https://www.example.com')),
+#                 asyncio.create_task(fetch_status(session, 'https://www.example.com'))
+#                 ]
+#         while pending:
+#             done, pending = await asyncio.wait(pending, return_when=FIRST_COMPLETED)
+#             print(f'Completed {len(done)} tasks')
+#             print(f'Pending {len(pending)} tasks')
+#             for done_task in done:
+#                 print(await done_task)
+# asyncio.run(main())
+
+# Example 9 : wait - exception handling
+
 @async_timed()
 async def main():
-    async with ClientSession() as session:
-        
-        pending = [
-                asyncio.create_task(fetch_status(session, 'https://www.example.com')),
-                asyncio.create_task(fetch_status(session, 'https://www.example.com')),
-                asyncio.create_task(fetch_status(session, 'https://www.example.com'))
+    async with aiohttp.ClientSession() as session:
+        url = 'https://exmaple.com'
+        fetchers = [
+                asyncio.create_task(fetch_status(session, url)),
+                asyncio.create_task(fetch_status(session, url)),
+                asyncio.create_task(fetch_status_delayed(session, url, 3)),
                 ]
-        while pending:
-            done, pending = await asyncio.wait(pending, return_when=FIRST_COMPLETED)
-            print(f'Completed {len(done)} tasks')
-            print(f'Pending {len(pending)} tasks')
-            for done_task in done:
-                print(await done_task)
+        done, pending = await asyncio.wait(fetchers, timeout=1)
+        print(f'Completed {len(done)} tasks')
+        print(f'Pending {len(pending)} tasks')
+        for done_task in done:
+            print(await done_task)
+
 asyncio.run(main())
 
